@@ -340,6 +340,7 @@ static rfbBool WaitForConnected(int socket, unsigned int secs)
     int so_error;
     socklen_t len = sizeof so_error;
     getsockopt(socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
+    errno = so_error;
     if (so_error!=0)
       return FALSE;
 #endif
@@ -432,6 +433,7 @@ ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int 
   hints.ai_socktype = SOCK_STREAM;
   if ((n = getaddrinfo(strcmp(hostname,"") == 0 ? "localhost": hostname, port_s, &hints, &res)))
   {
+    errno = -(1000 + n); // (ab)using errno for 'getaddrinfo' error reporting
     rfbClientErr("ConnectClientToTcpAddr6: getaddrinfo (%s)\n", gai_strerror(n));
     return RFB_INVALID_SOCKET;
   }

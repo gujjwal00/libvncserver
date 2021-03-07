@@ -308,7 +308,7 @@ ConnectToRFBServer(rfbClient* client,const char *hostname, int port)
     rec->tv.tv_sec = 0;
     rec->readTimestamp = FALSE;
     rec->doNotSleep = FALSE;
-    
+
     if (!rec->file) {
       rfbClientLog("Could not open %s.\n",client->serverHost);
       return FALSE;
@@ -441,6 +441,7 @@ rfbHandleAuthResult(rfbClient* client)
       return TRUE;
       break;
     case rfbVncAuthFailed:
+      errno = EACCES;
       if (client->major==3 && client->minor>7)
       {
         /* we have an error following */
@@ -450,10 +451,12 @@ rfbHandleAuthResult(rfbClient* client)
       rfbClientLog("VNC authentication failed\n");
       return FALSE;
     case rfbVncAuthTooMany:
+      errno = EACCES;
       rfbClientLog("VNC authentication failed - too many tries\n");
       return FALSE;
     }
 
+    errno = EACCES;
     rfbClientLog("Unknown VNC authentication result: %d\n",
                  (int)authResult);
     return FALSE;
@@ -917,6 +920,7 @@ InitialiseRFBConnection(rfbClient* client)
 
   if (sscanf(pv,rfbProtocolVersionFormat,&major,&minor) != 2) {
     rfbClientLog("Not a valid VNC server (%s)\n",pv);
+    errno = EPROTO;
     return FALSE;
   }
 
@@ -974,10 +978,10 @@ InitialiseRFBConnection(rfbClient* client)
     if (!ReadFromRFBServer(client, (char *)&authScheme, 4)) return FALSE;
     authScheme = rfbClientSwap32IfLE(authScheme);
   }
-  
+
   rfbClientLog("Selected Security Scheme %d\n", authScheme);
   client->authScheme = authScheme;
-  
+
   switch (authScheme) {
 
   case rfbConnFailed:
@@ -989,7 +993,7 @@ InitialiseRFBConnection(rfbClient* client)
 
     /* 3.8 and upwards sends a Security Result for rfbNoAuth */
     if ((client->major==3 && client->minor > 7) || client->major>3)
-        if (!rfbHandleAuthResult(client)) return FALSE;        
+        if (!rfbHandleAuthResult(client)) return FALSE;
 
     break;
 
@@ -1392,7 +1396,7 @@ SendFramebufferUpdateRequest(rfbClient* client, int x, int y, int w, int h, rfbB
   rfbFramebufferUpdateRequestMsg fur;
 
   if (!SupportsClient2Server(client, rfbFramebufferUpdateRequest)) return TRUE;
-  
+
   fur.type = rfbFramebufferUpdateRequest;
   fur.incremental = incremental ? 1 : 0;
   fur.x = rfbClientSwap16IfLE(x);
@@ -1417,14 +1421,14 @@ SendScaleSetting(rfbClient* client,int scaleSetting)
 
   ssm.scale = scaleSetting;
   ssm.pad = 0;
-  
+
   /* favor UltraVNC SetScale if both are supported */
   if (SupportsClient2Server(client, rfbSetScale)) {
       ssm.type = rfbSetScale;
       if (!WriteToRFBServer(client, (char *)&ssm, sz_rfbSetScaleMsg))
           return FALSE;
   }
-  
+
   if (SupportsClient2Server(client, rfbPalmVNCSetScaleFactor)) {
       ssm.type = rfbPalmVNCSetScaleFactor;
       if (!WriteToRFBServer(client, (char *)&ssm, sz_rfbSetScaleMsg))
@@ -1695,7 +1699,7 @@ HandleRFBServerMessage(rfbClient* client)
 	}
 	continue;
       }
-      
+
       if (rect.encoding == rfbEncodingKeyboardLedState) {
           /* OK! We have received a keyboard state message!!! */
           client->KeyboardLedStateEnabled = 1;
@@ -1790,14 +1794,14 @@ HandleRFBServerMessage(rfbClient* client)
 
         /* UltraVNC with scaling, will send rectangles with a zero W or H
          *
-        if ((rect.encoding != rfbEncodingTight) && 
+        if ((rect.encoding != rfbEncodingTight) &&
             (rect.r.h * rect.r.w == 0))
         {
 	  rfbClientLog("Zero size rect - ignoring (encoding=%d (0x%08x) %dx, %dy, %dw, %dh)\n", rect.encoding, rect.encoding, rect.r.x, rect.r.y, rect.r.w, rect.r.h);
 	  continue;
         }
         */
-        
+
         /* If RichCursor encoding is used, we should prevent collisions
 	   between framebuffer updates and cursor drawing operations. */
         client->SoftCursorLockArea(client, rect.r.x, rect.r.y, rect.r.w, rect.r.h);
@@ -1809,7 +1813,7 @@ HandleRFBServerMessage(rfbClient* client)
 	int y=rect.r.y, h=rect.r.h;
 
 	bytesPerLine = rect.r.w * client->format.bitsPerPixel / 8;
-	/* RealVNC 4.x-5.x on OSX can induce bytesPerLine==0, 
+	/* RealVNC 4.x-5.x on OSX can induce bytesPerLine==0,
 	   usually during GPU accel. */
 	/* Regardless of cause, do not divide by zero. */
 	linesToRead = bytesPerLine ? (RFB_BUFFER_SIZE / bytesPerLine) : 0;
@@ -1829,7 +1833,7 @@ HandleRFBServerMessage(rfbClient* client)
 
 	}
 	break;
-      } 
+      }
 
       case rfbEncodingCopyRect:
       {
@@ -2125,7 +2129,7 @@ HandleRFBServerMessage(rfbClient* client)
     if (msg.sct.length > 1<<20) {
 	    rfbClientErr("Ignoring too big cut text length sent by server: %u B > 1 MB\n", (unsigned int)msg.sct.length);
 	    return FALSE;
-    }  
+    }
 
     buffer = malloc(msg.sct.length+1);
 
