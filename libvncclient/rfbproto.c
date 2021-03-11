@@ -547,6 +547,7 @@ ReadSupportedSecurityType(rfbClient* client, uint32_t *result, rfbBool subAuth)
             snprintf(buf2, sizeof(buf2), (loop>0 ? ", %d" : "%d"), (int)tAuth[loop]);
             strncat(buf1, buf2, sizeof(buf1)-strlen(buf1)-1);
         }
+        errno = EACCES;
         rfbClientLog("Unknown authentication scheme from VNC server: %s\n",
                buf1);
         return FALSE;
