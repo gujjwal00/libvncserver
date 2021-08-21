@@ -328,8 +328,14 @@ open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredenti
     SSL_CTX_set_cipher_list(ssl_ctx, "ALL");
   } else { /* anonTLS here */
       /* Need ADH cipher for anonTLS, see https://github.com/LibVNC/libvncserver/issues/347#issuecomment-597477103 */
-      SSL_CTX_set_cipher_list(ssl_ctx, "ADH");
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined LIBRESSL_VERSION_NUMBER
+#ifdef LIBWOLFSSL_VERSION_STRING
+      SSL_CTX_set_cipher_list(ssl_ctx, "ADH-AES256-GCM-SHA384:ADH-AES128-SHA"); // wolfSSL requires full cipher names
+#else
+      SL_CTX_set_cipher_list(ssl_ctx, "ADH");
+#endif
+
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined LIBRESSL_VERSION_NUMBER) ||\
+    defined(LIBWOLFSSL_VERSION_STRING)
       /*
 	See https://www.openssl.org/docs/man1.1.0/man3/SSL_set_security_level.html
 	Not specifying 0 here makes LibVNCClient fail connecting to some servers.
