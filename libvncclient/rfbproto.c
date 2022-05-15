@@ -747,6 +747,7 @@ HandleARDAuth(rfbClient *client)
   uint8_t gen[2], len[2];
   size_t keylen;
   uint8_t *mod = NULL, *resp = NULL, *priv = NULL, *pub = NULL, *key = NULL, *shared = NULL;
+  size_t priv_len = 0;
   uint8_t userpass[128], ciphertext[128];
   int ciphertext_len;
   int passwordLen, usernameLen;
@@ -786,7 +787,7 @@ HandleARDAuth(rfbClient *client)
   }
 
   /* Step 2: Generate own Diffie-Hellman public-private key pair. */
-  if(!dh_generate_keypair(priv, pub, gen, 2, mod, keylen)) {
+  if(!dh_generate_keypair(priv, &priv_len, pub, gen, 2, mod, keylen)) {
       rfbClientErr("HandleARDAuth: generating keypair failed\n");
       goto out;
   }
@@ -794,7 +795,7 @@ HandleARDAuth(rfbClient *client)
   /* Step 3: Perform Diffie-Hellman key agreement, using the generator (gen),
      prime (mod), and the peer's public key. The output will be a shared
      secret known to both us and the peer. */
-  if(!dh_compute_shared_key(key, priv, resp, mod, keylen)) {
+  if(!dh_compute_shared_key(key, priv, priv_len, resp, mod, keylen)) {
       rfbClientErr("HandleARDAuth: creating shared key failed\n");
       goto out;
   }

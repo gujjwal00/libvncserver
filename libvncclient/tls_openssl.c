@@ -331,7 +331,7 @@ open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredenti
 #ifdef LIBWOLFSSL_VERSION_STRING
       SSL_CTX_set_cipher_list(ssl_ctx, "ADH-AES256-GCM-SHA384:ADH-AES128-SHA"); // wolfSSL requires full cipher names
 #else
-      SL_CTX_set_cipher_list(ssl_ctx, "ADH");
+      SSL_CTX_set_cipher_list(ssl_ctx, "ADH");
 #endif
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined LIBRESSL_VERSION_NUMBER) ||\
