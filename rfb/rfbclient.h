@@ -471,14 +471,6 @@ typedef struct _rfbClient {
 	 * For internal use only.
 	 */
 	MUTEX(tlsRwMutex);
-
-
-	//These three are used to synchronize framebuffer modification with application.
-	int fbRealWidth;
-	int fbRealHeight;
-	MUTEX(fbMutex);
-
-
 } rfbClient;
 
 /* cursor.c */

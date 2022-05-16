@@ -353,8 +353,6 @@ rfbClient* rfbGetClient(int bitsPerSample,int samplesPerPixel,
   client->listen6Address = NULL;
   client->clientAuthSchemes = NULL;
 
-  INIT_MUTEX(client->fbMutex);
-
 #ifdef LIBVNCSERVER_HAVE_SASL
   client->GetSASLMechanism = NULL;
   client->GetUser = NULL;
@@ -551,8 +549,6 @@ void rfbClientCleanup(rfbClient* client) {
     free(client->destHost);
   if (client->clientAuthSchemes)
     free(client->clientAuthSchemes);
-
-  TINI_MUTEX(client->fbMutex);
 
 #ifdef LIBVNCSERVER_HAVE_SASL
   if (client->saslSecret)
