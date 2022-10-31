@@ -584,6 +584,10 @@ rfbClientConnectionGone(rfbClientPtr cl)
 
 #ifdef LIBVNCSERVER_HAVE_LIBZ
     rfbFreeZrleData(cl);
+
+#ifdef LIBVNCSERVER_HAVE_LIBJPEG
+    rfbFreeTightData(cl);
+#endif
 #endif
 
     rfbFreeUltraData(cl);
@@ -866,12 +870,15 @@ rfbProcessClientInitMessage(rfbClientPtr cl)
             rfbReleaseClientIterator(iterator);
         } else {
             iterator = rfbGetClientIterator(cl->screen);
-            while ((otherCl = rfbClientIteratorNext(iterator)) != NULL) {
+	    rfbClientPtr nextCl, otherCl = rfbClientIteratorNext(iterator);
+            while (otherCl) {
+		nextCl = rfbClientIteratorNext(iterator);
                 if ((otherCl != cl) && (otherCl->state == RFB_NORMAL)) {
                     rfbLog("Not shared - closing connection to client %s\n",
                            otherCl->host);
                     rfbCloseClient(otherCl);
                 }
+		otherCl = nextCl;
             }
             rfbReleaseClientIterator(iterator);
         }

@@ -295,9 +295,6 @@ typedef struct _rfbScreenInfo
     rfbKbdReleaseAllKeysProcPtr kbdReleaseAllKeys;
     rfbPtrAddEventProcPtr ptrAddEvent;
     rfbSetXCutTextProcPtr setXCutText;
-#ifdef LIBVNCSERVER_HAVE_LIBZ
-    rfbSetXCutTextUTF8ProcPtr setXCutTextUTF8;
-#endif
     rfbGetCursorProcPtr getCursorPtr;
     rfbSetTranslateFunctionProcPtr setTranslateFunction;
     rfbSetSingleWindowProcPtr setSingleWindow;
@@ -371,6 +368,9 @@ typedef struct _rfbScreenInfo
     int pipe_notify_listener_thread[2];
 #elif defined(LIBVNCSERVER_HAVE_WIN32THREADS)
     uintptr_t listener_thread;
+#endif
+#ifdef LIBVNCSERVER_HAVE_LIBZ
+    rfbSetXCutTextUTF8ProcPtr setXCutTextUTF8;
 #endif
 } rfbScreenInfo, *rfbScreenInfoPtr;
 
@@ -491,7 +491,8 @@ typedef struct _rfbClientRec {
         /* Ephemeral internal-use states that will never be seen by software
          * using LibVNCServer to provide services: */
 
-        RFB_INITIALISATION_SHARED /**< sending initialisation messages with implicit shared-flag already true */
+        RFB_INITIALISATION_SHARED, /**< sending initialisation messages with implicit shared-flag already true */
+        RFB_SHUTDOWN            /**< Client is shutting down */
     } state;
 
     rfbBool reverseConnection;
@@ -566,7 +567,7 @@ typedef struct _rfbClientRec {
      * means 8K minimum.
      */
 
-#define UPDATE_BUF_SIZE 30000
+#define UPDATE_BUF_SIZE 32768
 
     char updateBuf[UPDATE_BUF_SIZE];
     int ublen;
@@ -698,6 +699,13 @@ typedef struct _rfbClientRec {
     uint32_t extClipboardMaxUnsolicitedSize;
     char *extClipboardData;
     int extClipboardDataSize;
+
+#ifdef LIBVNCSERVER_HAVE_LIBJPEG
+    /* Tight encoding internal variables, stored per-client for thread safety */
+    rfbBool tightUsePixelFormat24;
+    void *tightTJ;
+    int tightPngDstDataLen;
+#endif
 #endif
 } rfbClientRec, *rfbClientPtr;
 
@@ -897,8 +905,6 @@ extern rfbBool rfbSendRectEncodingZlib(rfbClientPtr cl, int x, int y, int w,
 #define TIGHT_DEFAULT_COMPRESSION  6
 #define TURBO_DEFAULT_SUBSAMP 0
 
-extern rfbBool rfbTightDisableGradient;
-
 extern int rfbNumCodedRectsTight(rfbClientPtr cl, int x,int y,int w,int h);
 
 extern rfbBool rfbSendRectEncodingTight(rfbClientPtr cl, int x,int y,int w,int h);
@@ -1026,8 +1032,8 @@ void rfbDoNothingWithClient(rfbClientPtr cl);
 enum rfbNewClientAction defaultNewClientHook(rfbClientPtr cl);
 void rfbRegisterProtocolExtension(rfbProtocolExtension* extension);
 void rfbUnregisterProtocolExtension(rfbProtocolExtension* extension);
-struct _rfbProtocolExtension* rfbGetExtensionIterator();
-void rfbReleaseExtensionIterator();
+struct _rfbProtocolExtension* rfbGetExtensionIterator(void);
+void rfbReleaseExtensionIterator(void);
 rfbBool rfbEnableExtension(rfbClientPtr cl, rfbProtocolExtension* extension,
 	void* data);
 rfbBool rfbDisableExtension(rfbClientPtr cl, rfbProtocolExtension* extension);
@@ -1069,12 +1075,12 @@ extern rfbBool rfbIsActive(rfbScreenInfoPtr screenInfo);
  * Register the TightVNC-1.3.x file transfer extension.
  * NB That TightVNC-2.x uses a different, incompatible file transfer protocol.
  */
-void rfbRegisterTightVNCFileTransferExtension();
+void rfbRegisterTightVNCFileTransferExtension(void);
 /**
  * Unregister the TightVNC-1.3.x file transfer extension.
  * NB That TightVNC-2.x uses a different, incompatible file transfer protocol.
  */
-void rfbUnregisterTightVNCFileTransferExtension();
+void rfbUnregisterTightVNCFileTransferExtension(void);
 
 /* Statistics */
 extern char *messageNameServer2Client(uint32_t type, char *buf, int len);

@@ -138,14 +138,16 @@ int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, c
 {
     int result = 0;
     DH *dh;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L || \
+	(defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x30500000)
     const BIGNUM *pub_key = NULL;
     const BIGNUM *priv_key = NULL;
 #endif
 
     if(!(dh = DH_new()))
 	goto out;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
+	(defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x30500000)
     dh->p = BN_bin2bn(prime, keylen, NULL);
     dh->g = BN_bin2bn(gen, gen_len, NULL);
 #else
@@ -154,7 +156,8 @@ int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, c
 #endif
     if(!DH_generate_key(dh))
 	goto out;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
+	(defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x30500000)
     if(BN_bn2bin(dh->priv_key, priv_out) == 0)
 	goto out;
     *priv_len = BN_num_bytes(dh->priv_key);
@@ -187,7 +190,8 @@ int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const size_t
 
     if(!(dh = DH_new()))
 	goto out;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined LIBRESSL_VERSION_NUMBER
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
+	(defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER < 0x30500000)
     dh->p = BN_bin2bn(prime, keylen, NULL);
     dh->g = BN_bin2bn(dummy_gen, 2, NULL);
     dh->priv_key = BN_bin2bn(priv, priv_len, NULL);
