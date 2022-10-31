@@ -702,17 +702,18 @@ HandleUltraMSLogonIIAuth(rfbClient *client)
   uint8_t gen[8], mod[8], resp[8], pub[8], priv[8];
   uint8_t username[256], password[64], key[8];
   rfbCredential *cred;
+  size_t priv_len;
 
   if (!ReadFromRFBServer(client, (char *)gen, sizeof(gen))) return FALSE;
   if (!ReadFromRFBServer(client, (char *)mod, sizeof(mod))) return FALSE;
   if (!ReadFromRFBServer(client, (char *)resp, sizeof(resp))) return FALSE;
 
-  if(!dh_generate_keypair(priv, pub, gen, sizeof(gen), mod, sizeof(priv))) {
+  if(!dh_generate_keypair(priv, &priv_len, pub, gen, sizeof(gen), mod, sizeof(priv))) {
       rfbClientErr("HandleUltraMSLogonIIAuth: generating keypair failed\n");
       return FALSE;
   }
 
-  if(!dh_compute_shared_key(key, priv, resp, mod, sizeof(key))) {
+  if(!dh_compute_shared_key(key, priv, priv_len, resp, mod, sizeof(key))) {
       rfbClientErr("HandleUltraMSLogonIIAuth: creating shared key failed\n");
       return FALSE;
   }
