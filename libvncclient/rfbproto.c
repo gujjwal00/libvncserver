@@ -702,18 +702,17 @@ HandleUltraMSLogonIIAuth(rfbClient *client)
   uint8_t gen[8], mod[8], resp[8], pub[8], priv[8];
   uint8_t username[256], password[64], key[8];
   rfbCredential *cred;
-  size_t priv_len;
 
   if (!ReadFromRFBServer(client, (char *)gen, sizeof(gen))) return FALSE;
   if (!ReadFromRFBServer(client, (char *)mod, sizeof(mod))) return FALSE;
   if (!ReadFromRFBServer(client, (char *)resp, sizeof(resp))) return FALSE;
 
-  if(!dh_generate_keypair(priv, &priv_len, pub, gen, sizeof(gen), mod, sizeof(priv))) {
+  if(!dh_generate_keypair(priv, pub, gen, sizeof(gen), mod, sizeof(priv))) {
       rfbClientErr("HandleUltraMSLogonIIAuth: generating keypair failed\n");
       return FALSE;
   }
 
-  if(!dh_compute_shared_key(key, priv, priv_len, resp, mod, sizeof(key))) {
+  if(!dh_compute_shared_key(key, priv, resp, mod, sizeof(key))) {
       rfbClientErr("HandleUltraMSLogonIIAuth: creating shared key failed\n");
       return FALSE;
   }
@@ -814,7 +813,6 @@ HandleARDAuth(rfbClient *client)
   uint8_t gen[2], len[2];
   size_t keylen;
   uint8_t *mod = NULL, *resp = NULL, *priv = NULL, *pub = NULL, *key = NULL, *shared = NULL;
-  size_t priv_len = 0;
   uint8_t userpass[128], ciphertext[128];
   int ciphertext_len;
   int passwordLen, usernameLen;
@@ -854,7 +852,7 @@ HandleARDAuth(rfbClient *client)
   }
 
   /* Step 2: Generate own Diffie-Hellman public-private key pair. */
-  if(!dh_generate_keypair(priv, &priv_len, pub, gen, 2, mod, keylen)) {
+  if(!dh_generate_keypair(priv, pub, gen, 2, mod, keylen)) {
       rfbClientErr("HandleARDAuth: generating keypair failed\n");
       goto out;
   }
@@ -862,7 +860,7 @@ HandleARDAuth(rfbClient *client)
   /* Step 3: Perform Diffie-Hellman key agreement, using the generator (gen),
      prime (mod), and the peer's public key. The output will be a shared
      secret known to both us and the peer. */
-  if(!dh_compute_shared_key(key, priv, priv_len, resp, mod, keylen)) {
+  if(!dh_compute_shared_key(key, priv, resp, mod, keylen)) {
       rfbClientErr("HandleARDAuth: creating shared key failed\n");
       goto out;
   }

@@ -82,12 +82,12 @@ int encrypt_aes128ecb(void *out, int *out_len, const unsigned char key[16], cons
     return 0;
 }
 
-int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, const uint8_t *gen, const size_t gen_len, const uint8_t *prime, const size_t keylen)
+int dh_generate_keypair(uint8_t *priv_out, uint8_t *pub_out, const uint8_t *gen, const size_t gen_len, const uint8_t *prime, const size_t keylen)
 {
     return 0;
 }
 
-int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const size_t priv_len, const uint8_t *pub, const uint8_t *prime, const size_t keylen)
+int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const uint8_t *pub, const uint8_t *prime, const size_t keylen)
 {
     return 0;
 }

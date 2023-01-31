@@ -134,7 +134,7 @@ int encrypt_aes128ecb(void *out, int *out_len, const unsigned char key[16], cons
     return result;
 }
 
-int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, const uint8_t *gen, const size_t gen_len, const uint8_t *prime, const size_t keylen)
+int dh_generate_keypair(uint8_t *priv_out, uint8_t *pub_out, const uint8_t *gen, const size_t gen_len, const uint8_t *prime, const size_t keylen)
 {
     int result = 0;
     DH *dh;
@@ -160,8 +160,6 @@ int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, c
 	(defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x30500000)
     if(BN_bn2bin(dh->priv_key, priv_out) == 0)
 	goto out;
-    *priv_len = BN_num_bytes(dh->priv_key);
-
     if(BN_bn2bin(dh->pub_key, pub_out) == 0)
 	goto out;
 #else
@@ -179,7 +177,7 @@ int dh_generate_keypair(uint8_t *priv_out, size_t *priv_len, uint8_t *pub_out, c
     return result;
 }
 
-int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const size_t priv_len, const uint8_t *pub, const uint8_t *prime, const size_t keylen)
+int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const uint8_t *pub, const uint8_t *prime, const size_t keylen)
 {
     int result = 0;
     DH *dh;
@@ -194,7 +192,7 @@ int dh_compute_shared_key(uint8_t *shared_out, const uint8_t *priv, const size_t
 	(defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER < 0x30500000)
     dh->p = BN_bin2bn(prime, keylen, NULL);
     dh->g = BN_bin2bn(dummy_gen, 2, NULL);
-    dh->priv_key = BN_bin2bn(priv, priv_len, NULL);
+    dh->priv_key = BN_bin2bn(priv, keylen, NULL);
 #else
     if(!DH_set0_pqg(dh, BN_bin2bn(prime, keylen, NULL), NULL, BN_new()))
 	goto out;
