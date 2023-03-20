@@ -1803,6 +1803,18 @@ sendExtClientCutTextNotify(rfbClient *client)
   return ret;
 }
 
+static rfbBool
+sendExtClientCutTextRequest(rfbClient *client)
+{
+  rfbClientCutTextMsg cct = {0, };
+  const uint32_t be_flags = rfbClientSwap32IfLE(rfbExtendedClipboard_Text|rfbExtendedClipboard_Request);
+  cct.type = rfbClientCutText;
+  cct.length = rfbClientSwap32IfLE(-((uint32_t)sizeof(be_flags)));/*flag*/
+  rfbBool ret = WriteToRFBServer(client, (char *)&cct, sz_rfbClientCutTextMsg)
+                && WriteToRFBServer(client, (char *)&be_flags, sizeof(be_flags));
+  return ret;
+}
+
 /**
  * Due to bugs, many servers (including most versions of LibVNCServer) can't
  * properly handle zlib streams created by compress() function of zlib library.
@@ -1942,17 +1954,20 @@ rfbClientProcessExtServerCutText(rfbClient* client, char *data, int len)
    * only process (text | provide). Ignore all others
    * modify here if need more types(rtf,html,dib,files)
    */
+  if (flags & rfbExtendedClipboard_Caps) {
+    rfbClientLog("rfbClientProcessExtServerCutText. default cap.\n");
+    client->extendedClipboardServerCapabilities |= rfbExtendedClipboard_Text; /* for now, only text */
+    return TRUE;
+  }
   if (!(flags & rfbExtendedClipboard_Text)) {
     rfbClientLog("rfbClientProcessExtServerCutText. not text type. ignore\n");
     return TRUE;
   }
+  if (flags & rfbExtendedClipboard_Notify) {
+    return sendExtClientCutTextRequest(client);
+  }
   if (!(flags & rfbExtendedClipboard_Provide)) {
     rfbClientLog("rfbClientProcessExtServerCutText. not provide type. ignore\n");
-    return TRUE;
-  }
-  if (flags & rfbExtendedClipboard_Caps) {
-    rfbClientLog("rfbClientProcessExtServerCutText. default cap.\n");
-    client->extendedClipboardServerCapabilities |= rfbExtendedClipboard_Text; /* for now, only text */
     return TRUE;
   }
 
