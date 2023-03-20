@@ -856,6 +856,9 @@ int WaitForMessage(rfbClient* client,unsigned int usecs)
     /* playing back vncrec file */
     return 1;
   
+  if (client->buffered > 0)
+    return 1;
+
   timeout.tv_sec=(usecs/1000000);
   timeout.tv_usec=(usecs%1000000);
 
