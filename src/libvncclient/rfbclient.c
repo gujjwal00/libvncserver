@@ -1717,6 +1717,9 @@ SendExtDesktopSize(rfbClient* client, uint16_t width, uint16_t height)
     sdm.width = rfbClientSwap16IfLE(width);
     sdm.height = rfbClientSwap16IfLE(height);
     sdm.numberOfScreens = 1;
+    screen = client->screen;
+    screen.x = 0;
+    screen.y = 0;
     screen.width = rfbClientSwap16IfLE(width);
     screen.height = rfbClientSwap16IfLE(height);
 
