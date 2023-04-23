@@ -486,6 +486,11 @@ typedef struct _rfbClient {
 	 * Callback fired when "Extended Clipboard" UTF-8 text data is received.
 	 */
         GotXCutTextUTF8Proc GotXCutTextUTF8;
+
+
+	rfbBool automaticUpdateRequests;
+
+
 } rfbClient;
 
 /* cursor.c */

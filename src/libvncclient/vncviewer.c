@@ -366,6 +366,8 @@ rfbClient* rfbGetClient(int bitsPerSample,int samplesPerPixel,
   client->screen.width = 0;
   client->screen.height = 0;
 
+  client->automaticUpdateRequests = TRUE;
+
   return client;
 }
 

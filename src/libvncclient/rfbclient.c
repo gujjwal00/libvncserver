@@ -2558,7 +2558,7 @@ HandleRFBServerMessage(rfbClient* client)
       client->GotFrameBufferUpdate(client, rect.r.x, rect.r.y, rect.r.w, rect.r.h);
     }
 
-    if (!SendIncrementalFramebufferUpdateRequest(client))
+    if (client->automaticUpdateRequests && !SendIncrementalFramebufferUpdateRequest(client))
       return FALSE;
 
     if (client->FinishedFrameBufferUpdate)
