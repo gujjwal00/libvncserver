@@ -981,26 +981,29 @@ InitialiseRFBConnection(rfbClient* client)
 
   if (!ReadFromRFBServer(client, pv, sz_rfbProtocolVersionMsg)) return FALSE;
 
-  errorMessageOnReadFailure = TRUE;
+    errorMessageOnReadFailure = TRUE;
 
-  pv[sz_rfbProtocolVersionMsg] = 0;
+    pv[sz_rfbProtocolVersionMsg] = 0;
 
-  if (sscanf(pv,rfbProtocolVersionFormat,&major,&minor) != 2) {
-    rfbClientLog("Not a valid VNC server (%s)\n",pv);
-    errno = EPROTO;
-    return FALSE;
-  }
+    if (sscanf(pv, rfbProtocolVersionFormat, &major, &minor) != 2) {
+        rfbClientLog("Not a valid VNC server (%s)\n", pv);
+        errno = EPROTO;
+        return FALSE;
+    }
 
+    client->serverMajor = major;
+    client->serverMinor = minor;
+    rfbClientLog("Received protocol version %d.%d\n", major, minor);
 
-  DefaultSupportedMessages(client);
-  client->major = major;
-  client->minor = minor;
+    DefaultSupportedMessages(client);
+    client->major = major;
+    client->minor = minor;
 
-  /* fall back to viewer supported version */
-  if ((major==rfbProtocolMajorVersion) && (minor>rfbProtocolMinorVersion))
-    client->minor = rfbProtocolMinorVersion;
+    /* fall back to viewer supported version */
+    if ((major == rfbProtocolMajorVersion) && (minor > rfbProtocolMinorVersion))
+        client->minor = rfbProtocolMinorVersion;
 
-  /* Legacy version of UltraVNC uses minor codes 4 and 6 for the server */
+    /* Legacy version of UltraVNC uses minor codes 4 and 6 for the server */
   /* left in for backwards compatibility */
   if (major==3 && (minor==4 || minor==6)) {
       rfbClientLog("UltraVNC server detected, enabling UltraVNC specific messages\n",pv);
