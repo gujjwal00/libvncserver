@@ -156,7 +156,8 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    if (client->readTimeout > 0 &&
 		++retries > (client->readTimeout * 1000 * 1000 / USECS_WAIT_PER_RETRY))
 	    {
-	      rfbClientLog("Connection timed out\n");
+            errno = ETIMEDOUT;
+            rfbClientErr("ReadFromRFBServer: Connection timed out\n");
 	      return FALSE;
 	    }
 	    /* TODO:
@@ -165,13 +166,14 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    WaitForMessage(client, USECS_WAIT_PER_RETRY);
 	    i = 0;
 	  } else {
-	    rfbClientErr("read (%d: %s)\n",errno,strerror(errno));
+          rfbClientErr("ReadFromRFBServer: read() failed: (%d: %s)\n", errno, strerror(errno));
 	    return FALSE;
 	  }
 	} else {
 	  if (errorMessageOnReadFailure) {
 	    rfbClientLog("VNC server closed connection\n");
 	  }
+        errno = 0; // Clear errno on clean disconnect
 	  return FALSE;
 	}
       }
@@ -205,7 +207,8 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    if (client->readTimeout > 0 &&
 		++retries > (client->readTimeout * 1000 * 1000 / USECS_WAIT_PER_RETRY))
 	    {
-		rfbClientLog("Connection timed out\n");
+            errno = ETIMEDOUT;
+            rfbClientErr("ReadFromRFBServer: Connection timed out\n");
 		return FALSE;
 	    }
 	    /* TODO:
@@ -214,13 +217,14 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    WaitForMessage(client, USECS_WAIT_PER_RETRY);
 	    i = 0;
 	  } else {
-	    rfbClientErr("read (%s)\n",strerror(errno));
+          rfbClientErr("ReadFromRFBServer: read() failed: %d (%s)\n", errno, strerror(errno));
 	    return FALSE;
 	  }
 	} else {
 	  if (errorMessageOnReadFailure) {
 	    rfbClientLog("VNC server closed connection\n");
 	  }
+        errno = 0; // Clear errno on clean disconnect
 	  return FALSE;
 	}
       }
@@ -300,16 +304,16 @@ WriteToRFBServer(rfbClient* client, const char *buf, unsigned int n)
 	  FD_SET(client->sock,&fds);
 
 	  if (select(client->sock+1, NULL, &fds, NULL, NULL) <= 0) {
-	    rfbClientErr("select\n");
+          rfbClientErr("WriteToRFBServer: select() failed: %d (%s)\n", errno, strerror(errno));
 	    return FALSE;
 	  }
 	  j = 0;
 	} else {
-	  rfbClientErr("write\n");
+        rfbClientErr("WriteToRFBServer: write() failed: %d (%s)\n", errno, strerror(errno));
 	  return FALSE;
 	}
       } else {
-	rfbClientLog("write failed\n");
+          rfbClientErr("WriteToRFBServer: write() returned 0\n");
 	return FALSE;
       }
     }
@@ -358,7 +362,7 @@ ConnectClientToTcpAddrWithTimeout(unsigned int host, int port, unsigned int time
     errno=WSAGetLastError();
 #endif
     if (!((errno == EWOULDBLOCK || errno == EINPROGRESS) && sock_wait_for_connected(sock, timeout))) {
-      rfbClientErr("ConnectToTcpAddr: connect\n");
+        rfbClientErr("ConnectToTcpAddr: connect() failed: %d (%s)\n", errno, strerror(errno));
       rfbCloseSocket(sock);
       return RFB_INVALID_SOCKET;
     }
@@ -402,7 +406,7 @@ ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int 
   if ((n = getaddrinfo(strcmp(hostname,"") == 0 ? "localhost": hostname, port_s, &hints, &res)))
   {
     errno = -(1000 + n); // (ab)using errno for 'getaddrinfo' error reporting
-    rfbClientErr("ConnectClientToTcpAddr6: getaddrinfo (%s)\n", gai_strerror(n));
+      rfbClientErr("ConnectClientToTcpAddr6: getaddrinfo() failed (%s)\n", gai_strerror(n));
     return RFB_INVALID_SOCKET;
   }
 
@@ -436,7 +440,7 @@ ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int 
 
   if (sock == RFB_INVALID_SOCKET)
   {
-    rfbClientErr("ConnectClientToTcpAddr6: connect\n");
+      rfbClientErr("ConnectClientToTcpAddr6: connect() failed: %d (%s)\n", errno, strerror(errno));
     return RFB_INVALID_SOCKET;
   }
 
@@ -870,7 +874,7 @@ int WaitForMessage(rfbClient* client,unsigned int usecs)
 #ifdef WIN32
     errno=WSAGetLastError();
 #endif
-    rfbClientLog("Waiting for message failed: %d (%s)\n",errno,strerror(errno));
+      rfbClientErr("Waiting for message failed: %d (%s)\n", errno, strerror(errno));
   }
 
   return num;
