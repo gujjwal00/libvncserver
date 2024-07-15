@@ -487,8 +487,10 @@ typedef struct _rfbClient {
  */
 	GotXCutTextUTF8Proc GotXCutTextUTF8;
 
-
-	rfbBool automaticUpdateRequests;
+#ifdef _MSC_VER
+#define _Atomic
+#endif
+	_Atomic rfbBool pauseFramebufferUpdates;
 	int serverMajor;
 	int serverMinor;
 

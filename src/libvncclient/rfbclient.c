@@ -1488,6 +1488,9 @@ SetFormatAndEncodings(rfbClient* client)
 rfbBool
 SendIncrementalFramebufferUpdateRequest(rfbClient* client)
 {
+    if (client->pauseFramebufferUpdates)
+        return TRUE;
+
 	return SendFramebufferUpdateRequest(client,
 			client->updateRect.x, client->updateRect.y,
 			client->updateRect.w, client->updateRect.h, TRUE);
@@ -2562,7 +2565,7 @@ HandleRFBServerMessage(rfbClient* client)
       client->GotFrameBufferUpdate(client, rect.r.x, rect.r.y, rect.r.w, rect.r.h);
     }
 
-    if (client->automaticUpdateRequests && !SendIncrementalFramebufferUpdateRequest(client))
+    if (!SendIncrementalFramebufferUpdateRequest(client))
       return FALSE;
 
     if (client->FinishedFrameBufferUpdate)
