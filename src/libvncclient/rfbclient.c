@@ -332,7 +332,7 @@ ConnectToRFBServer(rfbClient* client,const char *hostname, int port)
 #endif
   {
 #ifdef LIBVNCSERVER_IPv6
-    client->sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, client->connectTimeout);
+        client->sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, client->connectTimeout, client->interruptFd);
 #else
     unsigned int host;
 
@@ -367,7 +367,8 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
   char tmphost[250];
 
 #ifdef LIBVNCSERVER_IPv6
-  client->sock = ConnectClientToTcpAddr6WithTimeout(repeaterHost, repeaterPort, client->connectTimeout);
+    client->sock = ConnectClientToTcpAddr6WithTimeout(repeaterHost, repeaterPort, client->connectTimeout,
+                                                      client->interruptFd);
 #else
   unsigned int host;
   if (!StringToIPAddr(repeaterHost, &host)) {

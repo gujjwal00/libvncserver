@@ -83,4 +83,11 @@ rfbBool sock_set_nonblocking(rfbSocket sock, rfbBool non_blocking, void (*log)(c
 rfbBool sock_wait_for_connected(int socket, unsigned int timeout_seconds);
 
 
+/*
+   Interruptible variant.
+   Returns FALSE if 'interrupt_fd' becomes readable before connecting.
+*/
+rfbBool sock_wait_for_connected_interruptible(int socket, unsigned int timeout_seconds, int interrupt_fd);
+
+
 #endif /* _RFB_COMMON_SOCKETS_H */

@@ -53,22 +53,40 @@ rfbBool sock_set_nonblocking(rfbSocket sock, rfbBool non_blocking, void (*log)(c
 
 rfbBool sock_wait_for_connected(int socket, unsigned int timeout_seconds)
 {
+    return sock_wait_for_connected_interruptible(socket, timeout_seconds, -1);
+}
+
+
+rfbBool sock_wait_for_connected_interruptible(int socket, unsigned int timeout_seconds, int interrupt_fd) {
+    fd_set readfds;
   fd_set writefds;
   fd_set exceptfds;
   struct timeval timeout;
+    int max_fd = socket;
 
   timeout.tv_sec=timeout_seconds;
   timeout.tv_usec=0;
 
+    FD_ZERO(&readfds);
   FD_ZERO(&writefds);
   FD_SET(socket, &writefds);
   FD_ZERO(&exceptfds);
   FD_SET(socket, &exceptfds);
-  if (select(socket+1, NULL, &writefds, &exceptfds, &timeout)==1) {
+
+    if (interrupt_fd > -1) {
+        FD_SET(interrupt_fd, &readfds);
+        max_fd = rfbMax(max_fd, interrupt_fd);
+    }
+
+    if (select(max_fd + 1, &readfds, &writefds, &exceptfds, &timeout) > 0) {
 #ifdef WIN32
     if (FD_ISSET(socket, &exceptfds))
       return FALSE;
 #else
+        if (interrupt_fd > -1 && FD_ISSET(interrupt_fd, &readfds)) {
+            errno = EINTR;
+            return FALSE;
+        }
     int so_error;
     socklen_t len = sizeof so_error;
     getsockopt(socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
