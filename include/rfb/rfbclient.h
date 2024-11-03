@@ -233,6 +233,7 @@ typedef void (*GotBitmapProc)(struct _rfbClient* client, const uint8_t* buffer, 
 typedef rfbBool (*GotJpegProc)(struct _rfbClient* client, const uint8_t* buffer, int length, int x, int y, int w, int h);
 typedef rfbBool (*LockWriteToTLSProc)(struct _rfbClient* client);   /** @deprecated */
 typedef rfbBool (*UnlockWriteToTLSProc)(struct _rfbClient* client); /** @deprecated */
+typedef rfbBool (*VerifyServerCertificateProc)(struct _rfbClient *client, const unsigned char *der, int der_len);
 
 #ifdef LIBVNCSERVER_HAVE_SASL
 typedef char* (*GetUserProc)(struct _rfbClient* client);
@@ -501,6 +502,10 @@ typedef struct _rfbClient {
      */
     int interruptFd;
 
+    /**
+     * Called to verify a server certificate
+     */
+    VerifyServerCertificateProc VerifyServerCertificate;
 
 } rfbClient;
 

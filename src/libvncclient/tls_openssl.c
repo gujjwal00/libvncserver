@@ -247,6 +247,43 @@ load_crls_from_file(char *file, SSL_CTX *ssl_ctx)
     return FALSE;
 }
 
+// Custom certificate verification: This callback only verifies
+// the end-entity certificate. All intermediate chain certificates are ignored.
+// This callback is only effective if app opts-in by setting VerifyServerCertificate.
+// This is intended for apps using trust-on-first-use policy, e.g Android apps
+// like AVNC where system trust store may not be available.
+static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
+    SSL *ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+    rfbClient *client = SSL_get_app_data(ssl);
+
+    // If app is not verifying certificates, maintain default OpenSSL behavior
+    if (!client->VerifyServerCertificate)
+        return preverify_ok;
+
+    // Ignore/trust intermediate certificates
+    int depth = X509_STORE_CTX_get_error_depth(ctx);
+    if (depth > 0)
+        return 1;
+
+    X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
+    if (!cert)
+        return 0;
+
+    unsigned char *der = NULL;
+    int der_len = 0;
+    der_len = i2d_X509(cert, &der);
+    if (der_len < 0) {
+        rfbClientErr("Unable to convert x509 certificate to DER");
+        return 0;
+    }
+
+    rfbBool result;
+    result = client->VerifyServerCertificate(client, der, der_len);
+
+    OPENSSL_free(der);
+    return result ? 1 : 0;
+}
+
 static SSL *
 open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredential *cred)
 {
@@ -312,7 +349,7 @@ open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredenti
       }
     }
 
-    SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
+      SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, &verify_callback);
 
     if (verify_crls == rfbX509CrlVerifyClient) 
       X509_VERIFY_PARAM_set_flags(param, X509_V_FLAG_CRL_CHECK);
@@ -356,6 +393,7 @@ open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredenti
   }
 
   SSL_set_fd (ssl, sockfd);
+    SSL_set_app_data(ssl, client);
   SSL_CTX_set_app_data (ssl_ctx, client);
 
   do
