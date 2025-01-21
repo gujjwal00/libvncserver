@@ -811,7 +811,7 @@ extern int WaitForMessage(rfbClient* client,unsigned int usecs);
 
 /**
  * Allows passing a FD to interrupt the wait.
- * Returns 0 (same as elapsed timeout) if interruptFd becomes readable during wait.
+ * If interruptFd becomes readable during wait, returns -1 & sets errno to EINTR
  */
 extern int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int interruptFd);
 
