@@ -481,13 +481,12 @@ typedef struct _rfbClient {
 	rfbExtDesktopScreen screen;
 
 #ifdef LIBVNCSERVER_HAVE_LIBZ
-	uint32_t extendedClipboardServerCapabilities;
+        uint32_t extendedClipboardServerCapabilities;
 #endif
-	/**
- * Callback fired when "Extended Clipboard" UTF-8 text data is received.
- */
-	GotXCutTextUTF8Proc GotXCutTextUTF8;
-
+        /**
+	 * Callback fired when "Extended Clipboard" UTF-8 text data is received.
+	 */
+        GotXCutTextUTF8Proc GotXCutTextUTF8;
 #ifdef _MSC_VER
 #define _Atomic
 #endif

@@ -367,8 +367,8 @@ rfbClient* rfbGetClient(int bitsPerSample,int samplesPerPixel,
   client->screen.height = 0;
 
   client->pauseFramebufferUpdates = FALSE;
-    client->interruptFd = -1;
-    client->VerifyServerCertificate = NULL;
+  client->interruptFd = -1;
+  client->VerifyServerCertificate = NULL;
 
   return client;
 }

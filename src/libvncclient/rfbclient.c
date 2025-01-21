@@ -332,7 +332,7 @@ ConnectToRFBServer(rfbClient* client,const char *hostname, int port)
 #endif
   {
 #ifdef LIBVNCSERVER_IPv6
-        client->sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, client->connectTimeout, client->interruptFd);
+    client->sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, client->connectTimeout, client->interruptFd);
 #else
     unsigned int host;
 
@@ -346,7 +346,7 @@ ConnectToRFBServer(rfbClient* client,const char *hostname, int port)
   }
 
   if (client->sock == RFB_INVALID_SOCKET) {
-      rfbClientErr("Unable to connect to VNC server\n");
+    rfbClientErr("Unable to connect to VNC server\n");
     return FALSE;
   }
 
@@ -367,8 +367,7 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
   char tmphost[250];
 
 #ifdef LIBVNCSERVER_IPv6
-    client->sock = ConnectClientToTcpAddr6WithTimeout(repeaterHost, repeaterPort, client->connectTimeout,
-                                                      client->interruptFd);
+  client->sock = ConnectClientToTcpAddr6WithTimeout(repeaterHost, repeaterPort, client->connectTimeout, client->interruptFd);
 #else
   unsigned int host;
   if (!StringToIPAddr(repeaterHost, &host)) {
@@ -380,7 +379,7 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
 #endif
 
   if (client->sock == RFB_INVALID_SOCKET) {
-      rfbClientErr("Unable to connect to VNC repeater\n");
+    rfbClientErr("Unable to connect to VNC repeater\n");
     return FALSE;
   }
 
@@ -390,7 +389,7 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
 
   /* UltraVNC repeater always report version 000.000 to identify itself */
   if (sscanf(pv,rfbProtocolVersionFormat,&major,&minor) != 2 || major != 0 || minor != 0) {
-      rfbClientErr("Not a valid VNC repeater (%s)\n", pv);
+    rfbClientErr("Not a valid VNC repeater (%s)\n", pv);
     return FALSE;
   }
 
@@ -417,8 +416,7 @@ ReadReason(rfbClient* client)
     if (!ReadFromRFBServer(client, (char *)&reasonLen, 4)) return;
     reasonLen = rfbClientSwap32IfLE(reasonLen);
     if(reasonLen > 1<<20) {
-        rfbClientErr("VNC connection failed, but sent reason length of %u exceeds limit of 1MB",
-                     (unsigned int) reasonLen);
+      rfbClientErr("VNC connection failed, but sent reason length of %u exceeds limit of 1MB",(unsigned int)reasonLen);
       return;
     }
     reason = malloc(reasonLen+1);
@@ -450,11 +448,11 @@ rfbHandleAuthResult(rfbClient* client)
         ReadReason(client);
         return FALSE;
       }
-            rfbClientErr("VNC authentication failed\n");
+      rfbClientErr("VNC authentication failed\n");
       return FALSE;
     case rfbVncAuthTooMany:
       errno = EACCES;
-            rfbClientErr("VNC authentication failed - too many tries\n");
+      rfbClientErr("VNC authentication failed - too many tries\n");
       return FALSE;
     }
 
@@ -584,7 +582,7 @@ HandleVncAuth(rfbClient *client)
         passwd = client->GetPassword(client);
 
       if ((!passwd) || (strlen(passwd) == 0)) {
-          rfbClientErr("Reading password failed\n");
+        rfbClientErr("Reading password failed\n");
         return FALSE;
       }
       if (strlen(passwd) > 8) {
@@ -625,13 +623,13 @@ HandlePlainAuth(rfbClient *client)
 
   if (!client->GetCredential)
   {
-      rfbClientErr("GetCredential callback is not set.\n");
+    rfbClientErr("GetCredential callback is not set.\n");
     return FALSE;
   }
   cred = client->GetCredential(client, rfbCredentialTypeUser);
   if (!cred)
   {
-      rfbClientErr("Reading credential failed\n");
+    rfbClientErr("Reading credential failed\n");
     return FALSE;
   }
 
@@ -983,29 +981,29 @@ InitialiseRFBConnection(rfbClient* client)
 
   if (!ReadFromRFBServer(client, pv, sz_rfbProtocolVersionMsg)) return FALSE;
 
-    errorMessageOnReadFailure = TRUE;
+  errorMessageOnReadFailure = TRUE;
 
-    pv[sz_rfbProtocolVersionMsg] = 0;
+  pv[sz_rfbProtocolVersionMsg] = 0;
 
-    if (sscanf(pv, rfbProtocolVersionFormat, &major, &minor) != 2) {
-        rfbClientErr("Not a valid VNC server (%s)\n", pv);
-        errno = EPROTO;
-        return FALSE;
-    }
+  if (sscanf(pv, rfbProtocolVersionFormat, &major, &minor) != 2) {
+    rfbClientErr("Not a valid VNC server (%s)\n", pv);
+    errno = EPROTO;
+    return FALSE;
+  }
 
-    client->serverMajor = major;
-    client->serverMinor = minor;
-    rfbClientLog("Received protocol version %d.%d\n", major, minor);
+  client->serverMajor = major;
+  client->serverMinor = minor;
+  rfbClientLog("Received protocol version %d.%d\n", major, minor);
 
-    DefaultSupportedMessages(client);
-    client->major = major;
-    client->minor = minor;
+  DefaultSupportedMessages(client);
+  client->major = major;
+  client->minor = minor;
 
-    /* fall back to viewer supported version */
-    if ((major == rfbProtocolMajorVersion) && (minor > rfbProtocolMinorVersion))
-        client->minor = rfbProtocolMinorVersion;
+  /* fall back to viewer supported version */
+  if ((major==rfbProtocolMajorVersion) && (minor>rfbProtocolMinorVersion))
+    client->minor = rfbProtocolMinorVersion;
 
-    /* Legacy version of UltraVNC uses minor codes 4 and 6 for the server */
+  /* Legacy version of UltraVNC uses minor codes 4 and 6 for the server */
   /* left in for backwards compatibility */
   if (major==3 && (minor==4 || minor==6)) {
       rfbClientLog("UltraVNC server detected, enabling UltraVNC specific messages\n",pv);
@@ -1126,7 +1124,7 @@ InitialiseRFBConnection(rfbClient* client)
 #endif /* LIBVNCSERVER_HAVE_SASL */
 
       default:
-          rfbClientErr("Unknown sub authentication scheme from VNC server: %d\n",
+        rfbClientErr("Unknown sub authentication scheme from VNC server: %d\n",
             (int)subAuthScheme);
         return FALSE;
     }
@@ -1180,7 +1178,7 @@ InitialiseRFBConnection(rfbClient* client)
 #endif /* LIBVNCSERVER_HAVE_SASL */
 
       default:
-          rfbClientErr("Unknown sub authentication scheme from VNC server: %d\n",
+        rfbClientErr("Unknown sub authentication scheme from VNC server: %d\n",
             client->subAuthScheme);
         return FALSE;
     }
@@ -2739,7 +2737,7 @@ HandleRFBServerMessage(rfbClient* client)
 
       if(!handled) {
 	char buffer[256];
-          rfbClientErr("Unknown message type %d from VNC server\n", msg.type);
+    rfbClientErr("Unknown message type %d from VNC server\n", msg.type);
 	ReadFromRFBServer(client, buffer, 256);
 	return FALSE;
       }

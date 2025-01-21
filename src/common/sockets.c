@@ -58,46 +58,46 @@ rfbBool sock_wait_for_connected(int socket, unsigned int timeout_seconds)
 
 
 rfbBool sock_wait_for_connected_interruptible(int socket, unsigned int timeout_seconds, int interrupt_fd) {
-    fd_set readfds;
+  fd_set readfds;
   fd_set writefds;
   fd_set exceptfds;
   struct timeval timeout;
-    int max_fd = socket;
+  int max_fd = socket;
 
   timeout.tv_sec=timeout_seconds;
   timeout.tv_usec=0;
 
-    FD_ZERO(&readfds);
+  FD_ZERO(&readfds);
   FD_ZERO(&writefds);
   FD_SET(socket, &writefds);
   FD_ZERO(&exceptfds);
   FD_SET(socket, &exceptfds);
 
-    if (interrupt_fd > -1) {
-        FD_SET(interrupt_fd, &readfds);
-        max_fd = rfbMax(max_fd, interrupt_fd);
-    }
+  if (interrupt_fd > -1) {
+    FD_SET(interrupt_fd, &readfds);
+    max_fd = rfbMax(max_fd, interrupt_fd);
+  }
 
-    if (select(max_fd + 1, &readfds, &writefds, &exceptfds, &timeout) > 0) {
+  if (select(max_fd + 1, &readfds, &writefds, &exceptfds, &timeout) > 0) {
 #ifdef WIN32
     if (FD_ISSET(socket, &exceptfds))
       return FALSE;
 #else
-        if (interrupt_fd > -1 && FD_ISSET(interrupt_fd, &readfds)) {
-            errno = EINTR;
-            return FALSE;
-        }
+    if (interrupt_fd > -1 && FD_ISSET(interrupt_fd, &readfds)) {
+      errno = EINTR;
+      return FALSE;
+    }
     int so_error;
     socklen_t len = sizeof so_error;
     getsockopt(socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
-      if (so_error != 0) {
-          errno = so_error;
+    if (so_error != 0) {
+      errno = so_error;
       return FALSE;
-      }
+    }
 #endif
     return TRUE;
   } else {
-      errno = ETIMEDOUT;
+    errno = ETIMEDOUT;
   }
 
   return FALSE;
