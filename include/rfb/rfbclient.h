@@ -487,6 +487,9 @@ typedef struct _rfbClient {
 	 * Callback fired when "Extended Clipboard" UTF-8 text data is received.
 	 */
         GotXCutTextUTF8Proc GotXCutTextUTF8;
+
+        /* flag to indicate wheter updateRect is managed by lib or user */
+        rfbBool isUpdateRectManagedByLib;
 #ifdef _MSC_VER
 #define _Atomic
 #endif
@@ -522,7 +525,7 @@ extern rfbBool HandleCursorShape(rfbClient* client,int xhot, int yhot, int width
 extern void listenForIncomingConnections(rfbClient* viewer);
 extern int listenForIncomingConnectionsNoFork(rfbClient* viewer, int usec_timeout);
 
-/* rfbproto.c */
+/* rfbclient.c */
 
 extern rfbBool rfbEnableClientLogging;
 typedef void (*rfbClientLogProc)(const char *format, ...);
@@ -691,6 +694,26 @@ extern void PrintPixelFormat(rfbPixelFormat *format);
 
 extern rfbBool SupportsClient2Server(rfbClient* client, int messageType);
 extern rfbBool SupportsServer2Client(rfbClient* client, int messageType);
+
+/**
+ * Set the rectangle the client is interested in. If set, the client will
+ * ask only for the given rectangle in incremental framebuffer requests.
+ * @param client The client on which to set the rectangle
+ * @param rect The rectangle the client is interested in. The function does
+ *             not take ownership of 'rect'. Set to NULL to have the library
+ *             manage this, which means always request the full remote
+ *             framebuffer.
+ */
+extern void rfbClientSetUpdateRect(rfbClient *client, rfbRectangle *rect);
+
+/**
+ * Get the rectangle the client asks for in incremental framebuffer
+ * requests.
+ * @param client The client for which to get the rectangle
+ * @param rect Will be filled with what's currently set for the given client
+ * @param isManagedbylib Will be set to TRUE if client is using the default
+ */
+extern void rfbClientGetUpdateRect(rfbClient *client, rfbRectangle *rect, rfbBool *isManagedByLib);
 
 /* client data */
 

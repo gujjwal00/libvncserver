@@ -371,7 +371,8 @@ open_ssl_connection (rfbClient *client, int sockfd, rfbBool anonTLS, rfbCredenti
       SSL_CTX_set_cipher_list(ssl_ctx, "aNULL");
 #endif
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined LIBRESSL_VERSION_NUMBER) ||\
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L || \
+    (defined (LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x30600000) || \
     defined(LIBWOLFSSL_VERSION_STRING)
       /*
 	See https://www.openssl.org/docs/man1.1.0/man3/SSL_set_security_level.html

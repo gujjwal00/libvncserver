@@ -407,6 +407,7 @@ static rfbBool rfbInitConnection(rfbClient* client)
     client->updateRect.x = client->updateRect.y = 0;
     client->updateRect.w = client->width;
     client->updateRect.h = client->height;
+    client->isUpdateRectManagedByLib = TRUE;
   }
 
   if (client->appData.scaleSetting>1)
@@ -562,6 +563,8 @@ void rfbClientCleanup(rfbClient* client) {
     rfbCloseSocket(client->sock);
   if (client->listenSock != RFB_INVALID_SOCKET)
     rfbCloseSocket(client->listenSock);
+  if (client->listen6Sock != RFB_INVALID_SOCKET)
+    rfbCloseSocket(client->listen6Sock);
   free(client->desktopName);
   free(client->serverHost);
   if (client->destHost)

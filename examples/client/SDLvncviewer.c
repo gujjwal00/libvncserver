@@ -42,9 +42,6 @@ static rfbBool resize(rfbClient* client) {
 	if (enableResizable)
 		sdlFlags |= SDL_WINDOW_RESIZABLE;
 
-	client->updateRect.x = client->updateRect.y = 0;
-	client->updateRect.w = width; client->updateRect.h = height;
-
 	/* (re)create the surface used as the client's framebuffer */
 	SDL_FreeSurface(rfbClientGetClientData(client, SDL_Init));
 	SDL_Surface* sdl=SDL_CreateRGBSurface(0,
@@ -437,9 +434,21 @@ static void got_selection_utf8(rfbClient *cl, const char *buf, int len)
 
 
 static rfbCredential* get_credential(rfbClient* cl, int credentialType){
-        rfbCredential *c = malloc(sizeof(rfbCredential));
+	rfbCredential *c = malloc(sizeof(rfbCredential));
+	if (!c) {
+		return NULL;
+	}
 	c->userCredential.username = malloc(RFB_BUF_SIZE);
+	if (!c->userCredential.username) {
+		free(c);
+		return NULL;
+	}
 	c->userCredential.password = malloc(RFB_BUF_SIZE);
+	if (!c->userCredential.password) {
+		free(c->userCredential.username);
+		free(c);
+		return NULL;
+	}
 
 	if(credentialType != rfbCredentialTypeUser) {
 	    rfbClientErr("something else than username and password required for authentication\n");
