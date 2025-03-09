@@ -67,6 +67,11 @@ rfbBool sock_wait_for_connected_interruptible(int socket, unsigned int timeout_s
   timeout.tv_sec=timeout_seconds;
   timeout.tv_usec=0;
 
+  if(socket == RFB_INVALID_SOCKET) {
+      errno = EBADF;
+      return FALSE;
+  }
+
   FD_ZERO(&readfds);
   FD_ZERO(&writefds);
   FD_SET(socket, &writefds);

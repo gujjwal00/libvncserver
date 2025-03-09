@@ -167,6 +167,11 @@ static int sock_read_ready(SSL *ssl, uint32_t ms)
 
 	FD_ZERO(&fds);
 
+        if(SSL_get_fd(ssl) == RFB_INVALID_SOCKET) {
+            errno = EBADF;
+            return -1;
+        }
+
 	FD_SET(SSL_get_fd(ssl), &fds);
 
 	tv.tv_sec = ms / 1000;
@@ -571,10 +576,10 @@ HandleAnonTLSAuth(rfbClient* client)
 static void
 FreeX509Credential(rfbCredential *cred)
 {
-  if (cred->x509Credential.x509CACertFile) free(cred->x509Credential.x509CACertFile);
-  if (cred->x509Credential.x509CACrlFile) free(cred->x509Credential.x509CACrlFile);
-  if (cred->x509Credential.x509ClientCertFile) free(cred->x509Credential.x509ClientCertFile);
-  if (cred->x509Credential.x509ClientKeyFile) free(cred->x509Credential.x509ClientKeyFile);
+  free(cred->x509Credential.x509CACertFile);
+  free(cred->x509Credential.x509CACrlFile);
+  free(cred->x509Credential.x509ClientCertFile);
+  free(cred->x509Credential.x509ClientKeyFile);
   free(cred);
 }
 

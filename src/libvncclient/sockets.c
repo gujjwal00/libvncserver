@@ -300,6 +300,12 @@ WriteToRFBServer(rfbClient* client, const char *buf, unsigned int n)
 		errno == ENOENT ||
 #endif
 		errno == EAGAIN) {
+          if(client->sock == RFB_INVALID_SOCKET) {
+              errno = EBADF;
+              rfbClientErr("socket invalid\n");
+              return FALSE;
+          }
+
 	  FD_ZERO(&fds);
 	  FD_SET(client->sock,&fds);
 
@@ -871,6 +877,11 @@ int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int inter
 
   timeout.tv_sec=(usecs/1000000);
   timeout.tv_usec=(usecs%1000000);
+
+  if(client->sock == RFB_INVALID_SOCKET) {
+      errno = EBADF;
+      return -1;
+  }
 
   FD_ZERO(&fds);
   FD_SET(client->sock,&fds);
