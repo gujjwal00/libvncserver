@@ -498,13 +498,6 @@ typedef struct _rfbClient {
 	int serverMinor;
 
     /**
-     * If set to a valid FD, some long running operations (e.g. connect()) will
-     * be aborted if this FD becomes readable.
-     * Note: App is responsible for setting/clearing/closing this FD.
-     */
-    int interruptFd;
-
-    /**
      * Called to verify a server certificate
      */
     VerifyServerCertificateProc VerifyServerCertificate;
@@ -803,8 +796,7 @@ extern rfbSocket ConnectClientToTcpAddrWithTimeout(unsigned int host, int port, 
    @param timeout The time in seconds to wait for a connection
    @return A nonblocking socket or RFB_INVALID_SOCKET if the connection failed
 */
-extern rfbSocket
-ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int timeout, int interruptFd);
+extern rfbSocket ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int timeout);
 /**
    Tries to connect to a Unix socket using the given timeout value.
    @param sockFile Path of the socket file
@@ -830,12 +822,6 @@ extern rfbBool SameMachine(rfbSocket sock);
  * @return the return value of the underlying select() call
  */
 extern int WaitForMessage(rfbClient* client,unsigned int usecs);
-
-/**
- * Allows passing a FD to interrupt the wait.
- * Returns 0 (same as elapsed timeout) if interruptFd becomes readable during wait.
- */
-extern int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int interruptFd);
 
 /* vncviewer.c */
 /**

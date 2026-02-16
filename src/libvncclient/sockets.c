@@ -387,7 +387,7 @@ ConnectClientToTcpAddrWithTimeout(unsigned int host, int port, unsigned int time
 rfbSocket
 ConnectClientToTcpAddr6(const char *hostname, int port)
 {
-  rfbSocket sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, DEFAULT_CONNECT_TIMEOUT, -1);
+  rfbSocket sock = ConnectClientToTcpAddr6WithTimeout(hostname, port, DEFAULT_CONNECT_TIMEOUT);
   /* put socket back into blocking mode for compatibility reasons */
   if (sock != RFB_INVALID_SOCKET) {
     SetBlocking(sock);
@@ -396,7 +396,7 @@ ConnectClientToTcpAddr6(const char *hostname, int port)
 }
 
 rfbSocket
-ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int timeout, int interruptFd)
+ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int timeout)
 {
 #ifdef LIBVNCSERVER_IPv6
   rfbSocket sock;
@@ -430,8 +430,7 @@ ConnectClientToTcpAddr6WithTimeout(const char *hostname, int port, unsigned int 
 #ifdef WIN32
           errno=WSAGetLastError();
 #endif
-          if ((errno == EWOULDBLOCK || errno == EINPROGRESS) &&
-                sock_wait_for_connected_interruptible(sock, timeout, interruptFd))
+          if ((errno == EWOULDBLOCK || errno == EINPROGRESS) && sock_wait_for_connected(sock, timeout))
             break;
           rfbCloseSocket(sock);
           sock = RFB_INVALID_SOCKET;
@@ -857,16 +856,11 @@ PrintInHex(char *buf, int len)
   fflush(stderr);
 }
 
-int WaitForMessage(rfbClient *client, unsigned int usecs) {
-    return WaitForMessageInterruptible(client, usecs, -1);
-}
-
-int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int interruptFd)
+int WaitForMessage(rfbClient *client, unsigned int usecs)
 {
   fd_set fds;
   struct timeval timeout;
   int num;
-  int max_fd;
 
   if (client->serverPort==-1)
     /* playing back vncrec file */
@@ -885,22 +879,15 @@ int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int inter
 
   FD_ZERO(&fds);
   FD_SET(client->sock,&fds);
-  max_fd = client->sock;
 
-  if (interruptFd > -1) {
-    FD_SET(interruptFd, &fds);
-    max_fd = rfbMax(max_fd, interruptFd);
-  }
 
-  num = select(max_fd + 1, &fds, NULL, NULL, &timeout);
+  num = select(client->sock + 1, &fds, NULL, NULL, &timeout);
   if(num<0) {
 #ifdef WIN32
     errno=WSAGetLastError();
 #endif
     rfbClientErr("Waiting for message failed: %d (%s)\n", errno, strerror(errno));
-  } else if (num > 0 && interruptFd > -1 && FD_ISSET(interruptFd, &fds)) {
 
-      return 0; // Treat as elapsed timeout
   }
 
   return num;
