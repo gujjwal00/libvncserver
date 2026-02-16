@@ -899,8 +899,8 @@ int WaitForMessageInterruptible(rfbClient *client, unsigned int usecs, int inter
 #endif
     rfbClientErr("Waiting for message failed: %d (%s)\n", errno, strerror(errno));
   } else if (num > 0 && interruptFd > -1 && FD_ISSET(interruptFd, &fds)) {
-    errno = EINTR;
-    return -1;
+
+      return 0; // Treat as elapsed timeout
   }
 
   return num;
