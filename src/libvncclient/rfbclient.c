@@ -389,7 +389,7 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
 
   /* UltraVNC repeater always report version 000.000 to identify itself */
   if (sscanf(pv,rfbProtocolVersionFormat,&major,&minor) != 2 || major != 0 || minor != 0) {
-    rfbClientErr("Not a valid VNC repeater (%s)\n", pv);
+    rfbClientErr("Not a valid VNC repeater (%s)\n",pv);
     return FALSE;
   }
 
@@ -422,7 +422,7 @@ ReadReason(rfbClient* client)
     reason = malloc(reasonLen+1);
     if (!reason || !ReadFromRFBServer(client, reason, reasonLen)) { free(reason); return; }
     reason[reasonLen]=0;
-    rfbClientErr("VNC connection failed. Reason sent by server: %s\n", reason);
+    rfbClientErr("VNC connection failed. Reason sent by server: %s\n",reason);
     free(reason);
 }
 
@@ -986,7 +986,7 @@ InitialiseRFBConnection(rfbClient* client)
   pv[sz_rfbProtocolVersionMsg] = 0;
 
   if (sscanf(pv, rfbProtocolVersionFormat, &major, &minor) != 2) {
-    rfbClientErr("Not a valid VNC server (%s)\n", pv);
+    rfbClientErr("Not a valid VNC server (%s)\n",pv);
     errno = EPROTO;
     return FALSE;
   }
@@ -2758,7 +2758,7 @@ HandleRFBServerMessage(rfbClient* client)
 
       if(!handled) {
 	char buffer[256];
-    rfbClientErr("Unknown message type %d from VNC server\n", msg.type);
+    rfbClientErr("Unknown message type %d from VNC server\n",msg.type);
 	ReadFromRFBServer(client, buffer, 256);
 	return FALSE;
       }

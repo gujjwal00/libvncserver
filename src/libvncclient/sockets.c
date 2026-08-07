@@ -166,7 +166,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    WaitForMessage(client, USECS_WAIT_PER_RETRY);
 	    i = 0;
 	  } else {
-	    rfbClientErr("ReadFromRFBServer: read() failed: (%d: %s)\n", errno, strerror(errno));
+	    rfbClientErr("ReadFromRFBServer: read() failed: (%d: %s)\n",errno,strerror(errno));
 	    return FALSE;
 	  }
 	} else {
@@ -207,9 +207,9 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    if (client->readTimeout > 0 &&
 		++retries > (client->readTimeout * 1000 * 1000 / USECS_WAIT_PER_RETRY))
 	    {
-          errno = ETIMEDOUT;
-          rfbClientErr("ReadFromRFBServer: Connection timed out\n");
-		  return FALSE;
+		errno = ETIMEDOUT;
+		rfbClientErr("ReadFromRFBServer: Connection timed out\n");
+		return FALSE;
 	    }
 	    /* TODO:
 	       ProcessXtEvents();
@@ -217,7 +217,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    WaitForMessage(client, USECS_WAIT_PER_RETRY);
 	    i = 0;
 	  } else {
-	    rfbClientErr("ReadFromRFBServer: read() failed: %d (%s)\n", errno, strerror(errno));
+	    rfbClientErr("ReadFromRFBServer: read() failed: %d (%s)\n",errno,strerror(errno));
 	    return FALSE;
 	  }
 	} else {
@@ -858,7 +858,7 @@ PrintInHex(char *buf, int len)
   fflush(stderr);
 }
 
-int WaitForMessage(rfbClient *client, unsigned int usecs)
+int WaitForMessage(rfbClient* client,unsigned int usecs)
 {
   fd_set fds;
   struct timeval timeout;
@@ -884,12 +884,12 @@ int WaitForMessage(rfbClient *client, unsigned int usecs)
   FD_ZERO(&fds);
   FD_SET(client->sock,&fds);
 
-    num = select(client->sock + 1, &fds, NULL, NULL, &timeout);
+  num=select(client->sock+1, &fds, NULL, NULL, &timeout);
   if(num<0) {
 #ifdef WIN32
     errno=WSAGetLastError();
 #endif
-    rfbClientErr("Waiting for message failed: %d (%s)\n", errno, strerror(errno));
+    rfbClientErr("Waiting for message failed: %d (%s)\n",errno,strerror(errno));
   }
 
   return num;
