@@ -535,8 +535,7 @@ rfbBool rfbInitClient(rfbClient* client,int* argc,char** argv) {
   }
 
   if(!rfbClientConnect(client) || !rfbClientInitialise(client)) {
-    //cleanup should not happen silently
-    //rfbClientCleanup(client);
+    rfbClientCleanup(client);
     return FALSE;
   }
 
